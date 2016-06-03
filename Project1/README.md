@@ -62,7 +62,7 @@ Due to the RMSE remaining slightly elevated, more work can be done to attempt to
 
 ##Full Model Results
 
-<img src="001_Project_1_files/figure-html/distributionData-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="./images/distributionData-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
@@ -75,7 +75,7 @@ par(mfrow = c(2,2))
 plot(model_full)
 ```
 
-<img src="001_Project_1_files/figure-html/fullModelPlot-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="./images/fullModelPlot-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 ```r
 #Graphical Analysis from full model
@@ -95,19 +95,19 @@ plot(model_full)
 
 ###Forward Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](001_Project_1_files/figure-html/modelForward-1.png)![](001_Project_1_files/figure-html/modelForward-2.png)
+![](./images/modelForward-1.png)![](001_Project_1_files/figure-html/modelForward-2.png)
 
 ###Hybrid Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](001_Project_1_files/figure-html/modelHybrid-1.png)![](001_Project_1_files/figure-html/modelHybrid-2.png)
+![](./images/modelHybrid-1.png)![](001_Project_1_files/figure-html/modelHybrid-2.png)
 
 ###Ridge Model:Cross-Validated(10); Tune Length(10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](001_Project_1_files/figure-html/modelRidge-1.png)![](001_Project_1_files/figure-html/modelRidge-2.png)
+![](./images/modelRidge-1.png)![](001_Project_1_files/figure-html/modelRidge-2.png)
 
 ###Lasso Regression:Cross-Validated(10); Tune Lenth (10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](001_Project_1_files/figure-html/modelLasso-1.png)![](001_Project_1_files/figure-html/modelLasso-2.png)
+![](./images/modelLasso-1.png)![](001_Project_1_files/figure-html/modelLasso-2.png)
 
 ###Model Metric Comparison
 <b><i>In-Sample</b></i><br>
@@ -138,7 +138,7 @@ plot(model_full)
 ## lasso   0.4637  0.5673 0.6597 0.6305  0.7077 0.7623    0
 ```
 
-<img src="001_Project_1_files/figure-html/compareModels-1.png" title="" alt="" style="display: block; margin: auto;" />
+<img src="./images/compareModels-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 ###Model Performance on Test Data
 
