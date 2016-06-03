@@ -16,6 +16,7 @@ The City of Seattle recently bought out the bike-share service Pronto, which was
 </ol>
 
 <b><i> Sources of Data </b></i><br>
+
 The data comes from four separate sources: [Capital Bikeshare](https://www.capitalbikeshare.com/system-data), [Open Streetmap](http://osmar.r-forge.r-project.org/), [Google Maps API](https://developers.google.com/maps/documentation/geocoding/intro#Geocoding) and [NeighborhoodInfo](http://neighborhoodinfodc.org/index.html) (a collaborative composed of the Urban Institute and partner of the National Neighborhood Indicators Partnership (NNIP)).
 
 From mapping the number of rentals we find that there is large distribution near the National Mall and reflecting pool, which also share proximity to a number of the national memorial monuments (Lincoln, Vietnam War, WWII and Korean War). Thus, it may be fairly likely that these sites contribute to our usage trends and deserve more exploration. 
