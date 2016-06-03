@@ -16,7 +16,7 @@ The City of Seattle recently bought out the bike-share service Pronto, which was
 </ol><br>
 
 <b><i> Sources of Data </b></i>
-The data comes from four separate sources: 
+The data comes from four separate sources: <br>
 [Capital Bikeshare][1]
 [Open StreetMap][2]
 [Google Maps API][3] and
