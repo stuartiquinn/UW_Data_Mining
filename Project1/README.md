@@ -1,10 +1,7 @@
 # 001 Capital Bike Share Project
 May 5, 2016  
 
-
-
-
-#Introduction / About the Data
+# Introduction / About the Data
 
 The City of Seattle recently bought out the bike-share service Pronto, which was established in 2014. The membership of the program has continued to see declines over the previous two years, resulting in the $1.4M buy-out acquisition by the city. In order to identify areas to improve the program the city is hoping to determine factors that define a good station in other bike-share programs, specifically the Capital City Bikeshare in the DC, MD, VA area. The exercise will require defining and collecting attributes that drive or are indicative of high-usage as measured by number of rentals. 
 
@@ -23,19 +20,13 @@ From mapping the number of rentals we find that there is large distribution near
 
 Furthermore, we find in our table, that the majority of top rental stations occur in the warmer months, indicating weather influence on usage trends. In fact, on average, we find that there are more rentals in the warmer seasons across the entire data set. <br>
 
-<!--html_preserve--><div id="htmlwidget-6963" style="width:100%;height:auto;" class="datatables"></div>
-<script type="application/json" data-for="htmlwidget-6963">{"x":{"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25"],["Jefferson Dr &amp; 14th St SW","Columbus Circle / Union Station","Columbus Circle / Union Station","Jefferson Dr &amp; 14th St SW","Massachusetts Ave &amp; Dupont Circle NW","Columbus Circle / Union Station","Massachusetts Ave &amp; Dupont Circle NW","Massachusetts Ave &amp; Dupont Circle NW","15th &amp; P St NW","Thomas Circle","15th &amp; P St NW","Thomas Circle","New Hampshire Ave &amp; T St NW","14th &amp; V St NW","14th &amp; V St NW","New Hampshire Ave &amp; T St NW","Jefferson Dr &amp; 14th St SW","New York Ave &amp; 15th St NW","Eastern Market Metro / Pennsylvania Ave &amp; 7th St SE","Columbus Circle / Union Station","17th &amp; Corcoran St NW","8th &amp; H St NW","Eastern Market Metro / Pennsylvania Ave &amp; 7th St SE","15th &amp; P St NW","1st &amp; M St NE"],[38.78,13.67,13.8,37.66,18.07,12.19,18.95,15.6,12.61,16.31,13.45,16.52,10.88,12.8,13.09,11.05,36.82,31.19,13.83,11,12.25,19.41,15.23,11.71,15.72],["Summer","Summer","Spring","Spring","Summer","Autumn","Spring","Autumn","Summer","Summer","Spring","Spring","Summer","Summer","Spring","Spring","Autumn","Summer","Summer","Winter","Summer","Summer","Spring","Autumn","Summer"],[23601,22198,20765,20138,18598,17367,17167,13509,13333,12969,12373,12322,11296,11196,11039,10815,10499,10455,10309,10182,9965,9925,9636,9603,9556]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> </th>\n      <th>station</th>\n      <th>duration_mean</th>\n      <th>season</th>\n      <th>num_rentals</th>\n    </tr>\n  </thead>\n</table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"callback":null,"filter":"none"},"evals":[]}</script><!--/html_preserve--> <br>
-
-<b><i> Figure 1: Get Geographic Distribution of Number of Rentals</b></i><br>
-
-
-#Methods & Variable Selection
+# Methods & Variable Selection
 Since our analysis desired to understand attributes that increase usage trends of stations, we began with a base file that included aggregated number of rentals and mean duration based on station from the Capital City Bikeshare. The data set was also accompanied with geographic information (lat/long) variables for each station and surrounding features such as ATM, Cafe, etc. The total data set was 78 variables. We then reverse geocoded the lat/long variables with the Google API to get the associated zipcode of each station. Once we had the zipcode we loaded and merged local socioeconomic and demographic statistics at the zip level. In total, there were 83 before using pre-processing and subset algorithm techniques to reduce the number/complexity of the model. 
 
-##Pre-processing
+## Pre-processing
 In order to reduce concerns of multicollinearity or correlated predictors, we removed all variables that had a correlation over 0.75. Additionally, we combined a number of like terms into broader buckets. For example, we created **retail** which was a composite of shop_art, shop_books, etc. Utilizing the `caret` package we also normalized and scaled our data to make better sense of our model. Essentially, this process makes it possible to compare on an 'on-average' basis of the predictors impact to the outcome (number of rentals), rather than the outcome variable value when other predictors = 0. 
 
-##Variable and Model Selection 
+## Variable and Model Selection 
 Given the number of variables available to us and limited knowledge about what specifically drives rentals usage, we employed a number of  best subset variable selection algorithms to inform our selection of model features. The selection metric of measurement used for this analysis was the root-mean-squared-error (RMSE) or the average error of prediction when all model features are too at their average level. The result output and most important variables can be seen represented in graphs and tables within the appendix. 
 
 <ol>
