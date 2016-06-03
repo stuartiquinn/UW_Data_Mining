@@ -88,31 +88,24 @@ plot(model_full)
 ```
 
 
-
-
-
-
-
 ###Forward Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](./images/modelForward-1.png)![](001_Project_1_files/figure-html/modelForward-2.png)
+![](./images/modelForward-1.png)![](./images/modelForward-2.png)
 
 ###Hybrid Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](./images/modelHybrid-1.png)![](001_Project_1_files/figure-html/modelHybrid-2.png)
+![](./images/modelHybrid-1.png)![](./images/modelHybrid-2.png)
 
 ###Ridge Model:Cross-Validated(10); Tune Length(10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](./images/modelRidge-1.png)![](001_Project_1_files/figure-html/modelRidge-2.png)
+![](./images/modelRidge-1.png)![](./images/modelRidge-2.png)
 
 ###Lasso Regression:Cross-Validated(10); Tune Lenth (10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-![](./images/modelLasso-1.png)![](001_Project_1_files/figure-html/modelLasso-2.png)
+![](./images/modelLasso-1.png)![](./images//modelLasso-2.png)
 
 ###Model Metric Comparison
 <b><i>In-Sample</b></i><br>
-
-
 
 
 ```
