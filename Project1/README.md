@@ -204,7 +204,8 @@ sessionInfo()
 ```r
 #render()
 ```
-[1]: https://www.capitalbikeshare.com/system-data
-[2]: http://osmar.r-forge.r-project.org/
-[3]: https://developers.google.com/maps/documentation/geocoding/intro#Geocoding
-[4]: http://neighborhoodinfodc.org/index.html
+
+[1]:  https://www.capitalbikeshare.com/system-data
+[2]:  http://osmar.r-forge.r-project.org/
+[3]:  https://developers.google.com/maps/documentation/geocoding/intro#Geocoding
+[4]:  http://neighborhoodinfodc.org/index.html
