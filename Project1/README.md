@@ -1,13 +1,5 @@
----
-title: "001 Capital Bike Share Project"
-output:
-  html_document:
-    toc: yes
-  pdf_document:
-    toc: yes
-    toc_depth: 2
-date: "May 5, 2016"
----
+# 001 Capital Bike Share Project
+May 5, 2016  
 
 
 
@@ -26,26 +18,22 @@ The City of Seattle recently bought out the bike-share service Pronto, which was
 <li> Variables: 83 </li>
 </ol><br>
 
-<b><i> Sources of Data </b></i><br>
-The data comes from four separate sources: [Capital Bikeshare](https://www.capitalbikeshare.com/system-data), [Open Streetmap](http://osmar.r-forge.r-project.org/), [Google Maps API](https://developers.google.com/maps/documentation/geocoding/intro#Geocoding) and [NeighborhoodInfo](http://neighborhoodinfodc.org/index.html) (a collaborative composed of the Urban Institute and partner of the National Neighborhood Indicators Partnership (NNIP) ). 
-
 
 From mapping the number of rentals we find that there is large distribution near the National Mall and reflecting pool, which also share proximity to a number of the national memorial monuments (Lincoln, Vietnam War, WWII and Korean War). Thus, it may be fairly likely that these sites contribute to our usage trends and deserve more exploration. 
 
-Furthermore, we find in our table, that the majority of top rental stations occur in the warmer months, indicating weather influence on usage trends. In fact, on average, we find that there are more rentals in the warmer seasons across the entire data set. 
+Furthermore, we find in our table, that the majority of top rental stations occur in the warmer months, indicating weather influence on usage trends. In fact, on average, we find that there are more rentals in the warmer seasons across the entire data set. <br>
 
-preservee710fa5917d26d97
+<!--html_preserve--><div id="htmlwidget-6963" style="width:100%;height:auto;" class="datatables"></div>
+<script type="application/json" data-for="htmlwidget-6963">{"x":{"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25"],["Jefferson Dr &amp; 14th St SW","Columbus Circle / Union Station","Columbus Circle / Union Station","Jefferson Dr &amp; 14th St SW","Massachusetts Ave &amp; Dupont Circle NW","Columbus Circle / Union Station","Massachusetts Ave &amp; Dupont Circle NW","Massachusetts Ave &amp; Dupont Circle NW","15th &amp; P St NW","Thomas Circle","15th &amp; P St NW","Thomas Circle","New Hampshire Ave &amp; T St NW","14th &amp; V St NW","14th &amp; V St NW","New Hampshire Ave &amp; T St NW","Jefferson Dr &amp; 14th St SW","New York Ave &amp; 15th St NW","Eastern Market Metro / Pennsylvania Ave &amp; 7th St SE","Columbus Circle / Union Station","17th &amp; Corcoran St NW","8th &amp; H St NW","Eastern Market Metro / Pennsylvania Ave &amp; 7th St SE","15th &amp; P St NW","1st &amp; M St NE"],[38.78,13.67,13.8,37.66,18.07,12.19,18.95,15.6,12.61,16.31,13.45,16.52,10.88,12.8,13.09,11.05,36.82,31.19,13.83,11,12.25,19.41,15.23,11.71,15.72],["Summer","Summer","Spring","Spring","Summer","Autumn","Spring","Autumn","Summer","Summer","Spring","Spring","Summer","Summer","Spring","Spring","Autumn","Summer","Summer","Winter","Summer","Summer","Spring","Autumn","Summer"],[23601,22198,20765,20138,18598,17367,17167,13509,13333,12969,12373,12322,11296,11196,11039,10815,10499,10455,10309,10182,9965,9925,9636,9603,9556]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> </th>\n      <th>station</th>\n      <th>duration_mean</th>\n      <th>season</th>\n      <th>num_rentals</th>\n    </tr>\n  </thead>\n</table>","options":{"columnDefs":[{"className":"dt-right","targets":[2,4]},{"orderable":false,"targets":0}],"order":[],"autoWidth":false,"orderClasses":false},"callback":null,"filter":"none"},"evals":[]}</script><!--/html_preserve--> <br>
 
-<b><i> Figure 1: Get Geographic Distribution of Number of Rentals</b></i>
-
-preserve663569c92fbd86e9
+<b><i> Figure 1: Get Geographic Distribution of Number of Rentals</b></i><br>
 
 
 #Methods & Variable Selection
 Since our analysis desired to understand attributes that increase usage trends of stations, we began with a base file that included aggregated number of rentals and mean duration based on station from the Capital City Bikeshare. The data set was also accompanied with geographic information (lat/long) variables for each station and surrounding features such as ATM, Cafe, etc. The total data set was 78 variables. We then reverse geocoded the lat/long variables with the Google API to get the associated zipcode of each station. Once we had the zipcode we loaded and merged local socioeconomic and demographic statistics at the zip level. In total, there were 83 before using pre-processing and subset algorithm techniques to reduce the number/complexity of the model. 
 
 ##Pre-processing
-In order to reduce concerns of multicollinearity or correlated predictors, we removed all variables that had a correlation over 0.75. Additionally, we combined a number of like terms into broader buckets. For example, we created <i> retail </i> which was a composite of shop_art, shop_books, etc. Utilizing the `caret` package we also normalized and scaled our data to make better sense of our model. Essentially, this process makes it possible to compare on an 'on-average' basis of the predictors impact to the outcome (number of rentals), rather than the outcome variable value when other predictors = 0. 
+In order to reduce concerns of multicollinearity or correlated predictors, we removed all variables that had a correlation over 0.75. Additionally, we combined a number of like terms into broader buckets. For example, we created **retail** which was a composite of shop_art, shop_books, etc. Utilizing the `caret` package we also normalized and scaled our data to make better sense of our model. Essentially, this process makes it possible to compare on an 'on-average' basis of the predictors impact to the outcome (number of rentals), rather than the outcome variable value when other predictors = 0. 
 
 ##Variable and Model Selection 
 Given the number of variables available to us and limited knowledge about what specifically drives rentals usage, we employed a number of  best subset variable selection algorithms to inform our selection of model features. The selection metric of measurement used for this analysis was the root-mean-squared-error (RMSE) or the average error of prediction when all model features are too at their average level. The result output and most important variables can be seen represented in graphs and tables within the appendix. 
@@ -73,7 +61,7 @@ Due to the RMSE remaining slightly elevated, more work can be done to attempt to
 
 ##Full Model Results
 
-<img src="001_Project_1_files/figure-html/distributionData-1.png" title="" alt="" width="864" style="display: block; margin: auto;" />
+<img src="001_Project_1_files/figure-html/distributionData-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 
 
@@ -86,7 +74,7 @@ par(mfrow = c(2,2))
 plot(model_full)
 ```
 
-<img src="001_Project_1_files/figure-html/fullModelPlot-1.png" title="" alt="" width="768" style="display: block; margin: auto;" />
+<img src="001_Project_1_files/figure-html/fullModelPlot-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 ```r
 #Graphical Analysis from full model
@@ -106,19 +94,19 @@ plot(model_full)
 
 ###Forward Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-<img src="001_Project_1_files/figure-html/modelForward-1.png" title="" alt="" width="384" /><img src="001_Project_1_files/figure-html/modelForward-2.png" title="" alt="" width="384" />
+![](001_Project_1_files/figure-html/modelForward-1.png)![](001_Project_1_files/figure-html/modelForward-2.png)
 
 ###Hybrid Model:Cross-Validated(10); VarMax (25)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-<img src="001_Project_1_files/figure-html/modelHybrid-1.png" title="" alt="" width="384" /><img src="001_Project_1_files/figure-html/modelHybrid-2.png" title="" alt="" width="384" />
+![](001_Project_1_files/figure-html/modelHybrid-1.png)![](001_Project_1_files/figure-html/modelHybrid-2.png)
 
 ###Ridge Model:Cross-Validated(10); Tune Length(10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-<img src="001_Project_1_files/figure-html/modelRidge-1.png" title="" alt="" width="384" /><img src="001_Project_1_files/figure-html/modelRidge-2.png" title="" alt="" width="384" />
+![](001_Project_1_files/figure-html/modelRidge-1.png)![](001_Project_1_files/figure-html/modelRidge-2.png)
 
 ###Lasso Regression:Cross-Validated(10); Tune Lenth (10)
 <b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
-<img src="001_Project_1_files/figure-html/modelLasso-1.png" title="" alt="" width="384" /><img src="001_Project_1_files/figure-html/modelLasso-2.png" title="" alt="" width="384" />
+![](001_Project_1_files/figure-html/modelLasso-1.png)![](001_Project_1_files/figure-html/modelLasso-2.png)
 
 ###Model Metric Comparison
 <b><i>In-Sample</b></i><br>
@@ -149,7 +137,7 @@ plot(model_full)
 ## lasso   0.4637  0.5673 0.6597 0.6305  0.7077 0.7623    0
 ```
 
-<img src="001_Project_1_files/figure-html/compareModels-1.png" title="" alt="" width="864" style="display: block; margin: auto;" />
+<img src="001_Project_1_files/figure-html/compareModels-1.png" title="" alt="" style="display: block; margin: auto;" />
 
 ###Model Performance on Test Data
 
@@ -181,37 +169,29 @@ sessionInfo()
 ## [5] LC_TIME=English_United States.1252    
 ## 
 ## attached base packages:
-## [1] grid      stats     graphics  grDevices utils     datasets  methods  
-## [8] base     
+## [1] stats     graphics  grDevices utils     datasets  methods   base     
 ## 
 ## other attached packages:
-##  [1] leaps_2.9       elasticnet_1.1  lars_1.2        car_2.1-1      
-##  [5] MASS_7.3-45     caret_6.0-64    lattice_0.20-33 knitr_1.12.3   
-##  [9] DT_0.1          rmarkdown_0.9.2 stringr_1.0.0   maps_3.1.0     
-## [13] leaflet_1.0.0   gridExtra_2.2.1 arulesViz_1.1-1 ggplot2_2.1.0  
-## [17] dplyr_0.4.3     arules_1.4-1    Matrix_1.2-3   
+##  [1] leaps_2.9       rmarkdown_0.9.2 elasticnet_1.1  lars_1.2       
+##  [5] car_2.1-1       MASS_7.3-45     caret_6.0-64    ggplot2_2.1.0  
+##  [9] lattice_0.20-33 stringr_1.0.0   knitr_1.12.3    dplyr_0.4.3    
+## [13] DT_0.1          leaflet_1.0.0  
 ## 
 ## loaded via a namespace (and not attached):
-##  [1] Rcpp_0.12.4          vcd_1.4-1            zoo_1.7-12          
-##  [4] gtools_3.5.0         assertthat_0.1       digest_0.6.9        
-##  [7] lmtest_0.9-34        foreach_1.4.3        R6_2.1.2            
-## [10] plyr_1.8.3           MatrixModels_0.4-1   stats4_3.2.3        
-## [13] evaluate_0.8         gplots_2.17.0        lazyeval_0.1.10     
-## [16] SparseM_1.7          minqa_1.2.4          gdata_2.17.0        
-## [19] whisker_0.3-2        nloptr_1.0.4         labeling_0.3        
-## [22] splines_3.2.3        lme4_1.1-11          htmlwidgets_0.5     
-## [25] munsell_0.4.3        compiler_3.2.3       mgcv_1.8-9          
-## [28] htmltools_0.3        nnet_7.3-11          seriation_1.2-0     
-## [31] codetools_0.2-14     dendextend_1.1.8     bitops_1.0-6        
-## [34] jsonlite_0.9.19      nlme_3.1-124         gtable_0.2.0        
-## [37] registry_0.3         DBI_0.3.1            magrittr_1.5        
-## [40] formatR_1.2.1        scales_0.4.0         KernSmooth_2.23-15  
-## [43] stringi_1.0-1        mapproj_1.2-4        reshape2_1.4.1      
-## [46] scatterplot3d_0.3-36 RColorBrewer_1.1-2   iterators_1.0.8     
-## [49] tools_3.2.3          gclus_1.3.1          parallel_3.2.3      
-## [52] pbkrtest_0.4-6       yaml_2.1.13          colorspace_1.2-6    
-## [55] cluster_2.0.3        caTools_1.17.1       TSP_1.1-4           
-## [58] quantreg_5.21
+##  [1] Rcpp_0.12.4        compiler_3.2.3     formatR_1.2.1     
+##  [4] nloptr_1.0.4       plyr_1.8.3         iterators_1.0.8   
+##  [7] tools_3.2.3        digest_0.6.9       lme4_1.1-11       
+## [10] jsonlite_0.9.19    evaluate_0.8       gtable_0.2.0      
+## [13] nlme_3.1-124       mgcv_1.8-9         Matrix_1.2-3      
+## [16] foreach_1.4.3      DBI_0.3.1          yaml_2.1.13       
+## [19] parallel_3.2.3     SparseM_1.7        htmlwidgets_0.5   
+## [22] MatrixModels_0.4-1 stats4_3.2.3       grid_3.2.3        
+## [25] nnet_7.3-11        R6_2.1.2           minqa_1.2.4       
+## [28] reshape2_1.4.1     magrittr_1.5       scales_0.4.0      
+## [31] codetools_0.2-14   htmltools_0.3      splines_3.2.3     
+## [34] assertthat_0.1     pbkrtest_0.4-6     colorspace_1.2-6  
+## [37] quantreg_5.21      stringi_1.0-1      lazyeval_0.1.10   
+## [40] munsell_0.4.3
 ```
 
 ```r
