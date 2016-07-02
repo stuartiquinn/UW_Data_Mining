@@ -1,0 +1,504 @@
+---
+title: "001 Capital Bike Share Project"
+output:
+  html_document:
+    highlight: tango
+    theme: spacelab
+    toc: yes
+    toc_depth: 3
+---
+
+```{r loadPackages, echo = F, message = F, warning = F}
+
+if(!require(leaflet)){
+  install.packages("leaflet") #creates javascript map 
+  library(leaflet)
+}
+
+if(!require(DT)){
+  install.packages("DT") #creates interactive table 
+  library(DT)
+}
+
+if(!require(dplyr)){
+  install.packages("dplyr") #data wrangling
+  library(dplyr)
+}
+
+if(!require(knitr)){
+  install.packages("knitr")
+  library(knitr)
+}
+
+if(!require(stringr)){
+  install.packages("stringr")
+  library(stringr)
+}
+
+if(!require(caret)){
+  install.packages("caret")
+  library(caret)
+}
+
+if(!require(MASS)){
+  install.packages("MASS")
+  library(MASS)
+}
+
+if(!require(car)){
+  install.packages("car")      #ncvTest to determine constant variance
+  library(car)
+}
+
+if(!require(elasticnet)){
+  install.packages("elasticnet")
+  library(elasticnet)
+}
+
+if(!require(lars)){
+  install.packages("lars")
+  library(lars)
+}
+
+if(!require(rmarkdown)){
+  install.packages("rmarkdown")
+  library(rmarkdown)
+}
+
+```
+
+```{r loadData, echo = F, message = F, warning = F}
+
+#Full dataset
+url <- "https://raw.githubusercontent.com/erinshellman/BI-TECH-CP303/master/projects/project%201/data/bikeshare_2015.tsv"
+d <- read.table(url, header = T, sep = "\t")
+
+#Reverse geocode dataset -- gathered from ggmap revgeocode and google API
+
+geo <- read.csv("rev_geocode_zip_addr.csv", header = T)
+d$zip <- substr(str_extract(geo$V1," [0-9]{5}, .+"),2,6) #subset zipcode from address
+#convert to int from char
+d$zip <- as.integer(d$zip)
+
+#Demographic data from DC area -- certain values were imputed with median values
+##for zips to small to produce results
+
+d_dem <- read.csv("dem_data.csv", header = T)
+
+#use outer join to combine datasets by zipcode all.x=T implies outer join
+d_full <- merge(d, d_dem, by.x = "zip", by.y = "Zip") 
+
+```
+
+#Introduction / About the Data
+
+The City of Seattle recently bought out the bike-share service Pronto, which was established in 2014. The membership of the program has continued to see declines over the previous two years, resulting in the $1.4M buy-out acquisition by the city. In order to identify areas to improve the program the city is hoping to determine factors that define a good station in other bike-share programs, specifically the Capital City Bikeshare in the DC, MD, VA area. The exercise will require defining and collecting attributes that drive or are indicative of high-usage as measured by number of rentals. 
+
+<b><i> About the Data </b></i><br>
+<ol>
+<li> Source: Capital City Bikeshare</li>
+<li> Time Period: Jan 1, 2015 - Dec 31, 2015 </li>
+<li> Stations: `r length(unique(d_full$station))`</li>
+<li> Zipcodes: `r length(unique(d_full$zip))` </li>
+<li> Total Rentals: `r sum(d_full$num_rentals)` </li>
+<li> Variables: `r length(colnames(d_full))` </li>
+</ol><br>
+
+<b><i> Sources of Data </b></i><br>
+The data comes from four separate sources: [Capital Bikeshare](https://www.capitalbikeshare.com/system-data), [Open Streetmap](http://osmar.r-forge.r-project.org/), [Google Maps API](https://developers.google.com/maps/documentation/geocoding/intro#Geocoding) and [NeighborhoodInfo](http://neighborhoodinfodc.org/index.html) (a collaborative composed of the Urban Institute and partner of the National Neighborhood Indicators Partnership (NNIP) ). 
+
+
+From mapping the number of rentals we find that there is large distribution near the National Mall and reflecting pool, which also share proximity to a number of the national memorial monuments (Lincoln, Vietnam War, WWII and Korean War). Thus, it may be fairly likely that these sites contribute to our usage trends and deserve more exploration. 
+
+Furthermore, we find in our table, that the majority of top rental stations occur in the warmer months, indicating weather influence on usage trends. In fact, on average, we find that there are more rentals in the warmer seasons across the entire data set. 
+
+```{r dataTable, echo = F, message = F, warning = F, results = 'asis', cache = F, fig.width = 6, fig.height = 6 }
+
+top_25 <- d_full %>%
+  dplyr::select(station, duration_mean, season, num_rentals)%>%
+  arrange(desc(num_rentals))%>%
+  mutate(duration_mean = round(duration_mean, 2))%>%
+  top_n(25)
+
+dt <- datatable(top_25)
+library(htmlwidgets)
+saveWidget(dt, "data_table.html")
+```
+
+<b><i> Figure 1: Get Geographic Distribution of Number of Rentals</b></i>
+
+```{r echo = F, message = F, results= 'asis', cache = F, fig.width = 9, fig.height = 6, fig.align = "center"}
+m <- leaflet(d_full)%>% #dataset
+  fitBounds(-77.119766,38.79163,-76.909363,38.995853)%>% #geographic boundary
+  addTiles(group = "Default")%>% #generic openstreetmap tiles
+  addWMSTiles('http://maps2.dcgis.dc.gov/dcgis/services/DCGIS_DATA/Transportation_WebMercator/MapServer/WMSServer?request=GetCapabilities&service=WMS',
+              options = WMSTileOptions(format = "image/png",transparent = F),
+              attribution = "DCGIS/DOT",
+              group = "BikeTrails")%>%
+  
+  hideGroup("BikeTrails")%>%
+  
+  addLayersControl(
+    baseGroups = c("Default"),
+    overlayGroups = c("BikeTrails"),
+    options = layersControlOptions(collapsed = F)
+  ) %>%
+
+  addCircles(color = 'red', radius = ~sqrt(d_full$num_rentals),opacity = 0.2, weight = 1)
+
+m
+saveWidget(m, "bikeshare_map.html")
+
+```
+
+
+#Methods & Variable Selection
+Since our analysis desired to understand attributes that increase usage trends of stations, we began with a base file that included aggregated number of rentals and mean duration based on station from the Capital City Bikeshare. The data set was also accompanied with geographic information (lat/long) variables for each station and surrounding features such as ATM, Cafe, etc. The total data set was 78 variables. We then reverse geocoded the lat/long variables with the Google API to get the associated zipcode of each station. Once we had the zipcode we loaded and merged local socioeconomic and demographic statistics at the zip level. In total, there were `r length(colnames(d_full))` before using pre-processing and subset algorithm techniques to reduce the number/complexity of the model. 
+
+##Pre-processing
+In order to reduce concerns of multicollinearity or correlated predictors, we removed all variables that had a correlation over 0.75. Additionally, we combined a number of like terms into broader buckets. For example, we created <i> retail </i> which was a composite of shop_art, shop_books, etc. Utilizing the `caret` package we also normalized and scaled our data to make better sense of our model. Essentially, this process makes it possible to compare on an 'on-average' basis of the predictors impact to the outcome (number of rentals), rather than the outcome variable value when other predictors = 0. 
+
+##Variable and Model Selection 
+Given the number of variables available to us and limited knowledge about what specifically drives rentals usage, we employed a number of  best subset variable selection algorithms to inform our selection of model features. The selection metric of measurement used for this analysis was the root-mean-squared-error (RMSE) or the average error of prediction when all model features are too at their average level. The result output and most important variables can be seen represented in graphs and tables within the appendix. 
+
+<ol>
+<li> Forward Regression </li>
+<li> Hybrid Regression </li>
+<li> Ridge Regression </li>
+<li> Lasso Regression </li> 
+</ol>
+
+Upon running these algorithms, we find that a number of the most important features are consistent across methods, though the modelRidge produces the lowest RMSE on average. However, it is still quite elevated at 1942 -- meaning on average the error term prediction is off by that quantity when compared to actual results. The most significant predictors seem to be <i> tourism </i> as expected from our mapping. Finally, it is important to notice that despite our selection of variables being set to a max of 23, the feature importance drops rapidly after the top 10. Therefore, we will only use the top selected features in our final model. 
+
+#Conclusion & Recommendations
+
+Overall, tourism is the largest indicator of increased number of rentals per station. Based on this finding, it would benefit Pronto to not only include more stations/bikes in central tourist areas such as the Pike Place Market, but it may also benefit them to create a promotional strategy that targets tourists. This might include providing one-time discounted pricing for select hotels in the area to give away or perhaps increased marketing materials at major entry points (airport, ferry or via I-5 corridor). Fortunately, Seattle tourism figures have continued to increase and correspond closely to those of Washington D.C. (~20 million/year).
+
+Secondarily, we find a strong negative correspondence to number of rentals based on increases in the unemployment rate. This may be indicative of commuting preference for those employed versus unemployed. An additional and surprising metric related to number of rentals per station is the percent of teen births. Though on the surface this may not make sense, it does have the potential to be a proxy for urban density, where those teens having births may be in more rural or suburban communities. 
+
+The last series of features that are highly predictive of number of rentals are those that lie within other existing transportation infrastructure. For instance, we see that the railway subway entrance, traffic signals and bus stops all represent relationships to the number of rentals at a station. City ownership for Pronto may assist in leveraging transportation planning in a new way that elevates the usage of Pronto. For instance, participation in Sound Transit planning for future light rail stations or further integrated planning with Seattle may assist in driving rentals. 
+
+Due to the RMSE remaining slightly elevated, more work can be done to attempt to drive this figure down by testing more outside data. For instance, it may be valuable to explore visitor statistics, transient nature of population as measured by total percent of population born in state (and presently living there), elevation topography (hills) or finding survey information measuring the number of bike owners in an area. Though both D.C. and Seattle populations are similar in size, it is important to understand how the geography and behaviors differ to get a read on how to install more stations and optimize the Pronto program further. 
+
+#Appendix
+
+##Full Model Results
+
+```{r distributionData, echo = F, message = F, warning = F, fig.height = 6, fig.width = 9, fig.align = "center"}
+#View skew
+par(mfrow = c(1,2))
+hist(d_full$num_rentals, main = "Num_Rentals Distr.") #right skewed -- use transformation to test normalcy
+hist(log(d_full$num_rentals), main = "Log Distribution")
+
+d_full$log_num_rentals <- log(d_full$num_rentals)
+```
+
+
+
+```{r fullModel, echo = F, warning = F, message = F}
+#Set seed for reproducibility
+set.seed(1234)
+
+#split data 
+
+partition <- createDataPartition(y = d_full$num_rentals,
+                               p = 0.75,
+                               list = F)
+
+train_full <- d_full[partition,]
+test_full <- d_full[-partition,]
+
+##############################FULL MODEL#####################
+
+outcome_full <- "num_rentals"
+outcome_full_log <- "log_num_rentals"
+vars_full <- colnames(d_full[,c(1,3,9:83)])
+
+formula_full <- paste(outcome_full, paste(vars_full, collapse = "+"), sep = "~")
+model_full <- lm(as.formula(formula_full), data = train_full)
+
+
+formula_full_log <- paste(outcome_full_log, paste(vars_full, collapse = "+"), sep = "~")
+model_full_log <- lm(as.formula(formula_full_log), data = train_full)
+
+```
+
+```{r fullModelPlot, echo = T, fig.align = "center", fig.height = 8, fig.width = 8}
+
+#Full Model 
+par(mfrow = c(2,2))
+plot(model_full)
+
+#Graphical Analysis from full model
+#[1] Residual v. Fitted: Heteroscedacity is present, as indicated by the "cone shape." This means the variability of a variable (num_rentals) is not constant across the range of values of a second variable(s) that predict it. Accuracy wanes in prediction of high volume rentals
+#Source: http://www.statsmakemecry.com/smmctheblog/confusing-stats-terms-explained-heteroscedasticity-heteroske.html
+#[2] Indicates leptokurtosis (high-kurtosis) or the distribution has "Fat-Tails". 
+#Source: http://stats.stackexchange.com/questions/101274/how-to-interpret-a-qq-plot
+#[4] Cooks Distance: How far the predicted value of your data points would move if your model were built without that data point included
+#####Leverage: The impact on the OLS line of best fit (individually point impact)
+
+```
+
+```{r variableSelection, echo = F, warning = F, message = F}
+
+#Find best correlations
+corMatrix <- cor(d_full[,9:83], use = "pairwise.complete.obs") #only calculate for pairs that exist (rm NA)
+```
+
+```{r fullVarCorrelation, echo = F, warning = F, message = F}
+#Get quartiles of correlations
+#summary(corMatrix[upper.tri(corMatrix)])
+#Get index list of the values that are hihgly correlated and then remove from matrix
+hiCor <- findCorrelation(corMatrix, cutoff = 0.75)
+var_wo_cor <- corMatrix[,-hiCor]
+
+```
+
+```{r combineVars, echo = F, message = F, warning = F}
+#Create new data frame based on those column names
+#Dropped 3 variables that were correlated
+d_varClean <- d_full[, which(colnames(d_full) %in% colnames(corMatrix))] 
+
+#Add other variables back in 
+d_varClean <- cbind(d_full[,1:5], d_varClean)
+
+#Combine similar variables to reduce further
+
+d_varClean$retail <- d_full$shop_art + d_full$shop_gift + d_full$shop_books + d_full$shop_books + d_full$shop_clothes
+d_varClean$tourism <- d_full$tourism_hotel + d_full$tourism_museum + d_full$tourism_artwork + d_full$tourism_information + d_full$historic_monument + d_full$historic_memorial 
+d_varClean$nighlife <- d_full$bar + d_full$pub
+d_varClean$embassy <- d_full$embassy + d_full$diplomatic_embassy
+
+vars_remove <- c("shop_art", "shop_gift", "shop_books", "shop_books", "shop_clothes",
+                 "tourism_hotel","tourism_museum","tourism_artwork",
+                 "tourism_information","historic_monument", "historic_memorial", "bar", "pub",
+                 "diplomatic_embassy")
+
+
+d_varClean1 <- d_varClean %>%
+  dplyr::select(-shop_art, -shop_gift, -shop_books, -shop_books, -shop_clothes, -tourism_hotel, -tourism_museum, -tourism_artwork -tourism_information, -historic_monument, -historic_memorial, -bar, -pub, -diplomatic_embassy)
+
+
+```
+
+###Forward Model:Cross-Validated(10); VarMax (25)
+<b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
+```{r modelForward, echo = F, message = F, warning = F, fig.height = 4, fig.width = 4, fig.show = 'hold'}
+
+##########################SHRINKAGE########################
+#Find best predictors with forward method
+set.seed(1234)
+vars_subset <- colnames(d_varClean1[,c(1,3,6:72)])
+outcome2 <- "num_rentals"
+
+partition_subset <- createDataPartition(y = d_varClean1$num_rentals,
+                                        p = 0.75,
+                                        list = F)
+
+test <- d_varClean1[-partition_subset,] %>%
+  dplyr::select(-station, -duration_mean)
+train <- d_varClean1[partition_subset,] %>%
+  dplyr::select(-station, -duration_mean)
+
+modelForward <- train(num_rentals ~.,
+                      data = train,
+                      method = "leapForward",
+                      preProcess = c('center', 'scale'),
+                      tuneGrid = expand.grid(nvmax = 1:23),
+                      trControl = trainControl(method = 'cv', number = 10))
+
+#modelForward$bestTune #30
+coefForward <- as.data.frame(coef(modelForward$finalModel, modelForward$bestTune$nvmax))
+
+plot(modelForward)
+plot(varImp(modelForward), top = 12)
+
+```
+
+###Hybrid Model:Cross-Validated(10); VarMax (25)
+<b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
+```{r modelHybrid, echo = F, message = F, warning = F, fig.height = 4, fig.width = 4, fig.show = 'hold'}
+set.seed(1234)
+modelHybrid <- train(num_rentals ~.,
+                     data = train,
+                     method = "leapSeq", 
+                     preProcess = c("center", "scale"),
+                     tuneGrid = expand.grid(nvmax = 1:23),
+                     trControl = trainControl(method = "cv", number = 10))
+
+#modelHybrid$bestTune #26
+plot(modelHybrid)
+plot(varImp(modelHybrid), top = 12)
+
+
+```
+
+###Ridge Model:Cross-Validated(10); Tune Length(10)
+<b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
+```{r modelRidge, echo = F, message = F, warning = F, fig.height = 4, fig.width = 4, fig.show = 'hold'}
+set.seed(1234)
+modelRidge <- train(num_rentals ~.,
+                    data = train,
+                    method = "ridge",
+                    preProcess = c("center", "scale"),
+                    tuneLength = 10,
+                    trControl = trainControl(method = "cv", number = 10))
+
+
+coefRidge <- as.data.frame(coef(modelRidge$finalModel, modelReidge$bestTune$nvmax))
+coefRidge <- as.data.frame(predict(modelRidge$finalModel, typ = "coef", mode = "norm")$coefficients)
+#print(modelRidge)
+plot(modelRidge)
+plot(varImp(modelRidge), top = 12)
+
+```
+
+###Lasso Regression:Cross-Validated(10); Tune Lenth (10)
+<b><i>Top 12 Vars: Scaled and Centered (in-sample)</b></i><br>
+```{r modelLasso, echo = F, message = F, warning = F, fig.height = 4, fig.width = 4, fig.show = 'hold'}
+set.seed(1234)
+
+modelLasso <- train(num_rentals ~.,
+data = train,
+method = 'lasso',
+preProc = c('scale', 'center'),
+tuneLength = 10, 
+trControl = trainControl(method = 'cv', number = 10))
+
+coefLasso <- as.data.frame(predict(modelLasso$finalModel, typ = "coef", mode = "norm")$coefficients)
+
+plot(modelLasso)
+plot(varImp(modelLasso), top = 12)
+
+#ggplot(perfLasso, aes(x = pred, y = actual))+
+  #geom_point()+
+  #geom_abline(slope = 1)
+
+#sqrt(mean((perfLasso$err)^2)) #1780
+
+
+```
+
+###Model Metric Comparison
+<b><i>In-Sample</b></i><br>
+```{r modelCollar, echo = F, message = F, warning = F, fig.height = 4, fig.width = 4, fig.show = 'hold'}
+
+set.seed(1234)
+#Collar Model
+#Use log(num_rentals) 
+#Add additional metric num_rentals/TotPop2010*100 = rentals/per100
+
+d_Collar <- d_varClean1
+d_Collar$log_num_rentals <- log(d_Collar$num_rentals)
+d_Collar$num_rental_per100 <- (d_Collar$num_rentals/d_Collar$TotPop_2010)*100
+
+varCollar <- c("tourism", "tourism_artwork", "artwork_type_statue", "PctUnemployed_2007_11", "zip","no_bikes", "traffic_signals", "crossing", "post_box", "cafe","Pct_births_teen_2011","restaurant", "bus_stop", "railway_subway_entrance")
+
+outcomeCollar <- "log_num_rentals"
+
+formulaCollar <- paste(outcomeCollar, paste(varCollar, collapse = "+"), sep = "~")
+
+partitionCollar <- createDataPartition(d_Collar$log_num_rentals,
+                                  p = 0.75,
+                                  list = F)
+testCollar <- d_Collar[-partitionCollar,]
+trainCollar <- d_Collar[partitionCollar,]
+
+modelCollar <- train(as.formula(formulaCollar), 
+                     data = trainCollar,
+                     method = "lm", 
+                     preProcess = c("scale","center"),
+                     metric = "RMSE", 
+                     na.action = na.exclude)
+
+#summary(modelCollar)
+#print(modelCollar) #RMSE = 0.747, R^2 = 0.77 or training error
+
+
+#Train Error vs. Test Error, where Generalization Error is the difference
+
+predCollar <- predict(modelCollar, newdata = testCollar)
+
+perf = data.frame(actuals = testCollar$log_num_rentals,
+                  pred = predCollar,
+                  err = predCollar - testCollar$log_num_rentals)
+
+#ggplot(perf, aes(x = pred, y = actuals))+
+ # geom_point()+
+  #geom_abline(slope = 1)
+
+
+
+#test error  -- is 0.724, we may have an overly paramterized model...
+
+
+```
+
+
+```{r compareModels, echo = F, message = F, warning = F, fig.height = 6, fig.width = 9, fig.align = "center"}
+
+results <- resamples(list(forward=modelForward,
+                          hybrid=modelHybrid,
+                          ridge=modelRidge, 
+                          lasso=modelLasso))
+results_df <- as.data.frame(results$values)
+
+summary(results)
+dotplot(results, main = "Comparing Output RSME & R^2 (in-sample)")
+
+```
+
+###Model Performance on Test Data
+```{r testPerformance, echo = F, message = F, warning = F}
+set.seed(1234)
+
+predForward <- predict(modelForward, newdata = test)
+perfForward <- data.frame(actual = test$num_rentals,
+                          pred = predForward,
+                          err = predForward - test$num_rentals)
+
+
+predHybrid <- predict(modelHybrid, newdata = test)
+perfHybrid <- data.frame(actual = test$num_rentals,
+                         pred = predHybrid,
+                         err = predHybrid - test$num_rentals)
+
+predRidge <- predict(modelRidge, newdata = test)
+perfRidge <- data.frame(actual = test$num_rentals,
+                        pred = predRidge,
+                        err = predRidge - test$num_rentals)
+
+
+predLasso <- predict(modelLasso, newdata = test)
+perfLasso <- data.frame(actual = test$num_rentals,
+                        pred = predLasso, 
+                        err = predLasso - test$num_rentals)
+
+
+#RMSE for each model 
+
+pF <- sqrt(mean((perfForward$err)^2))
+pH <- sqrt(mean((perfHybrid$err)^2))
+pR <- sqrt(mean((perfRidge$err)^2))
+pL <- sqrt(mean((perfLasso$err)^2))
+
+
+testDataResults <- data.frame(modelType = c("Forward", "Hybrid", "Ridge", "Lasso"),
+                              TrainRMSE = c(mean(results_df$`forward~RMSE`),
+                                           mean(results_df$`hybrid~RMSE`),
+                                           mean(results_df$`ridge~RMSE`),
+                                           mean(results_df$`lasso~RMSE`)),
+                              TestRMSE = c(pF,pH,pR,pL))
+
+testDataResults$diff <- testDataResults$Train - testDataResults$Test
+print(testDataResults)
+```
+
+###R Packages Used
+
+```{r packageSet, echo = T, eval = T, warning = F, message = F }
+sessionInfo()
+#render("001_Project_1.Rmd", output_format = "all", clean = F, output_options = "self_contained")
+?render()
+```
+
